@@ -32,13 +32,32 @@ export const register = asyncHandler(async (req, res, next) => {
     avatar,
   });
 
-  res.status(200).json({
-    success: true,
-    message: "User registered successfully",
-    responseData: {
-      newUser,
-    },
+  const tokenData = {
+    _Id: newUser._id,
+  };
+
+  const token = jwt.sign(tokenData, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRE,
   });
+
+  res
+    .status(200)
+    .cookie("token", {
+      expire: new Date(
+        Date.now() * process.env.COOKIE_EXPIRE * 24 * 60 * 60 * 1000
+      ),
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    })
+    .json({
+      success: true,
+      message: "User registered successfully",
+      responseData: {
+        newUser,
+        token,
+      },
+    });
 });
 
 // login controller
